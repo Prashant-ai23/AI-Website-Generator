@@ -45,7 +45,7 @@ const generatedFileSchema = new Schema<IGeneratedFile>(
       type: String,
       required: [true, 'File name is required'],
       trim: true,
-      match: [/^[\w\-. ]+\.(ts|tsx|js|jsx|json|md|sql)$/, 'Invalid file name or extension'],
+      match: [/^[\w\-./]+(\.(ts|tsx|js|jsx|json|md|sql|yml|yaml|env|cjs|mjs|conf|lock|dockerfile|txt|html|css|xml))?$/i, 'Invalid file name or extension'],
     },
     fileType: {
       type: String,
@@ -55,7 +55,7 @@ const generatedFileSchema = new Schema<IGeneratedFile>(
     language: {
       type: String,
       required: [true, 'Language is required'],
-      enum: ['typescript', 'javascript', 'json', 'markdown', 'sql'],
+      enum: ['typescript', 'javascript', 'json', 'markdown', 'sql', 'yaml', 'html', 'css', 'text', 'shell', 'dockerfile'],
     },
     content: {
       type: String,

@@ -84,12 +84,23 @@ export class AIGeneratorService {
           framework: config.techStack.frontend || 'React',
           language: 'TypeScript',
           modules: requirements.modules,
+          currentPhase: 'initialization',
+          progress: 0,
+        },
+        requirements: requirements,
+        techStack: {
+          frontend: config.techStack.frontend || 'React',
+          backend: config.techStack.backend || 'Express.js',
+          database: config.techStack.database || 'MongoDB',
+          authentication: config.techStack.authentication || 'JWT',
         },
         status: 'success',
         files: [],
         folders: [],
         totalFiles: 0,
         totalSize: 0,
+        filesCount: 0,
+        errors: [],
       });
 
       await project.save();
@@ -145,12 +156,14 @@ export class AIGeneratorService {
 
       // Generate main App.tsx
       files.push(
-        this.generateReactFile('src/App.tsx', this.generateAppComponent(requirements))
+        this.generateReactFile(projectId, project.userId, 'src/App.tsx', this.generateAppComponent(requirements))
       );
 
       // Generate layout
       files.push(
         this.generateReactFile(
+          projectId,
+          project.userId,
           'src/layouts/MainLayout.tsx',
           this.generateLayoutComponent(requirements)
         )
@@ -160,7 +173,7 @@ export class AIGeneratorService {
       for (const page of requirements.pages) {
         const fileName = `src/pages/${this.camelToKebab(page)}Page.tsx`;
         const content = this.generatePageComponent(page, requirements);
-        files.push(this.generateReactFile(fileName, content));
+        files.push(this.generateReactFile(projectId, project.userId, fileName, content));
       }
 
       // Generate components
@@ -168,23 +181,23 @@ export class AIGeneratorService {
       for (const component of commonComponents) {
         const fileName = `src/components/${component}.tsx`;
         const content = this.generateComponentFile(component);
-        files.push(this.generateReactFile(fileName, content));
+        files.push(this.generateReactFile(projectId, project.userId, fileName, content));
       }
 
       // Generate types
       files.push(
-        this.generateReactFile('src/types/index.ts', this.generateTypesFile(requirements))
+        this.generateReactFile(projectId, project.userId, 'src/types/index.ts', this.generateTypesFile(requirements))
       );
 
       // Generate utils
       files.push(
-        this.generateReactFile('src/utils/helpers.ts', this.generateHelpersFile())
+        this.generateReactFile(projectId, project.userId, 'src/utils/helpers.ts', this.generateHelpersFile())
       );
 
       // Generate config files
-      files.push(this.generateReactFile('vite.config.ts', this.generateViteConfig()));
-      files.push(this.generateReactFile('tsconfig.json', this.generateTsConfig()));
-      files.push(this.generateReactFile('tailwind.config.js', this.generateTailwindConfig()));
+      files.push(this.generateReactFile(projectId, project.userId, 'vite.config.ts', this.generateViteConfig()));
+      files.push(this.generateReactFile(projectId, project.userId, 'tsconfig.json', this.generateTsConfig()));
+      files.push(this.generateReactFile(projectId, project.userId, 'tailwind.config.js', this.generateTailwindConfig()));
 
       // Save all files to database
       for (const file of files) {
@@ -203,9 +216,6 @@ export class AIGeneratorService {
     }
   }
 
-  /**
-   * Generate backend code (Express.js APIs)
-   */
   async generateBackend(
     projectId: string,
     requirements: AnalyzedRequirements,
@@ -225,7 +235,7 @@ export class AIGeneratorService {
 
       // Generate server.ts
       files.push(
-        this.generateBackendFile('src/server.ts', this.generateServerFile(requirements))
+        this.generateBackendFile(projectId, project.userId, 'src/server.ts', this.generateServerFile(requirements))
       );
 
       // Generate routes
@@ -236,7 +246,7 @@ export class AIGeneratorService {
         // Check if file already exists, if so, append
         const content = this.generateRouteFile(api, requirements);
         files.push(
-          this.generateBackendFile(fileName, content)
+          this.generateBackendFile(projectId, project.userId, fileName, content)
         );
       }
 
@@ -244,25 +254,29 @@ export class AIGeneratorService {
       for (const module of requirements.modules) {
         const fileName = `src/controllers/${module}Controller.ts`;
         const content = this.generateControllerFile(module, requirements);
-        files.push(this.generateBackendFile(fileName, content));
+        files.push(this.generateBackendFile(projectId, project.userId, fileName, content));
       }
 
       // Generate services
       for (const module of requirements.modules) {
         const fileName = `src/services/${module}Service.ts`;
         const content = this.generateServiceFile(module, requirements);
-        files.push(this.generateBackendFile(fileName, content));
+        files.push(this.generateBackendFile(projectId, project.userId, fileName, content));
       }
 
       // Generate middleware
       files.push(
         this.generateBackendFile(
+          projectId,
+          project.userId,
           'src/middleware/auth.ts',
           this.generateAuthMiddleware()
         )
       );
       files.push(
         this.generateBackendFile(
+          projectId,
+          project.userId,
           'src/middleware/errorHandler.ts',
           this.generateErrorHandler()
         )
@@ -271,6 +285,8 @@ export class AIGeneratorService {
       // Generate config
       files.push(
         this.generateBackendFile(
+          projectId,
+          project.userId,
           'src/config/database.ts',
           this.generateDatabaseConfig()
         )
@@ -314,13 +330,15 @@ export class AIGeneratorService {
         const fileName = `src/models/${collection}.ts`;
         const content = this.generateMongooseSchema(collection, requirements);
         files.push(
-          this.generateBackendFile(fileName, content)
+          this.generateBackendFile(projectId, project.userId, fileName, content)
         );
       }
 
       // Generate seed data
       files.push(
         this.generateBackendFile(
+          projectId,
+          project.userId,
           'src/seeds/seedData.ts',
           this.generateSeedFile(requirements)
         )
@@ -328,7 +346,9 @@ export class AIGeneratorService {
 
       // Generate indexes documentation
       files.push(
-        this.generateBackendFile(
+        this.generateDocumentationFile(
+          projectId,
+          project.userId,
           'docs/DATABASE_INDEXES.md',
           this.generateIndexDocumentation(requirements)
         )
@@ -368,12 +388,14 @@ export class AIGeneratorService {
 
       // Generate auth service
       files.push(
-        this.generateBackendFile('src/services/authService.ts', this.generateAuthService(requirements))
+        this.generateBackendFile(projectId, project.userId, 'src/services/authService.ts', this.generateAuthService(requirements))
       );
 
       // Generate auth controller
       files.push(
         this.generateBackendFile(
+          projectId,
+          project.userId,
           'src/controllers/authController.ts',
           this.generateAuthController(requirements)
         )
@@ -382,6 +404,8 @@ export class AIGeneratorService {
       // Generate auth routes
       files.push(
         this.generateBackendFile(
+          projectId,
+          project.userId,
           'src/routes/auth.ts',
           this.generateAuthRoutes(requirements)
         )
@@ -390,6 +414,8 @@ export class AIGeneratorService {
       // Generate JWT config
       files.push(
         this.generateBackendFile(
+          projectId,
+          project.userId,
           'src/config/jwt.ts',
           this.generateJWTConfig()
         )
@@ -398,6 +424,8 @@ export class AIGeneratorService {
       // Generate frontend auth hooks
       files.push(
         this.generateReactFile(
+          projectId,
+          project.userId,
           'src/hooks/useAuth.ts',
           this.generateUseAuthHook()
         )
@@ -406,6 +434,8 @@ export class AIGeneratorService {
       // Generate login form
       files.push(
         this.generateReactFile(
+          projectId,
+          project.userId,
           'src/components/LoginForm.tsx',
           this.generateLoginForm()
         )
@@ -414,6 +444,8 @@ export class AIGeneratorService {
       // Generate register form
       files.push(
         this.generateReactFile(
+          projectId,
+          project.userId,
           'src/components/RegisterForm.tsx',
           this.generateRegisterForm()
         )
@@ -454,14 +486,18 @@ export class AIGeneratorService {
       // README
       files.push(
         this.generateDocumentationFile(
+          projectId,
+          project.userId,
           'README.md',
-          this.generateReadme(project.name, requirements)
+          this.generateReadme(project.projectName, requirements)
         )
       );
 
       // API Documentation
       files.push(
         this.generateDocumentationFile(
+          projectId,
+          project.userId,
           'docs/API.md',
           this.generateAPIDocumentation(requirements)
         )
@@ -470,6 +506,8 @@ export class AIGeneratorService {
       // Architecture
       files.push(
         this.generateDocumentationFile(
+          projectId,
+          project.userId,
           'docs/ARCHITECTURE.md',
           this.generateArchitecture(requirements)
         )
@@ -478,6 +516,8 @@ export class AIGeneratorService {
       // Setup Guide
       files.push(
         this.generateDocumentationFile(
+          projectId,
+          project.userId,
           'docs/SETUP.md',
           this.generateSetupGuide(requirements)
         )
@@ -486,6 +526,8 @@ export class AIGeneratorService {
       // Database Schema Doc
       files.push(
         this.generateDocumentationFile(
+          projectId,
+          project.userId,
           'docs/DATABASE.md',
           this.generateDatabaseDoc(requirements)
         )
@@ -524,34 +566,38 @@ export class AIGeneratorService {
       const files: any[] = [];
 
       // Docker
-      if (project.useDockerization) {
-        files.push(
-          this.generateDeploymentFile('Dockerfile', this.generateDockerfile(requirements))
-        );
-        files.push(
-          this.generateDeploymentFile(
-            'docker-compose.yml',
-            this.generateDockerCompose(requirements)
-          )
-        );
-      }
+      files.push(
+        this.generateDeploymentFile(projectId, project.userId, 'Dockerfile', this.generateDockerfile(requirements))
+      );
+      files.push(
+        this.generateDeploymentFile(
+          projectId,
+          project.userId,
+          'docker-compose.yml',
+          this.generateDockerCompose(requirements)
+        )
+      );
 
       // Environment
       files.push(
-        this.generateDeploymentFile('.env.example', this.generateEnvExample(requirements))
+        this.generateDeploymentFile(projectId, project.userId, '.env.example', this.generateEnvExample(requirements))
       );
 
       // Package.json
       files.push(
         this.generateDeploymentFile(
+          projectId,
+          project.userId,
           'package.json',
-          this.generatePackageJson(project.name, requirements)
+          this.generatePackageJson(project.projectName, requirements)
         )
       );
 
       // CI/CD
       files.push(
         this.generateDeploymentFile(
+          projectId,
+          project.userId,
           '.github/workflows/deploy.yml',
           this.generateGithubWorkflow(requirements)
         )
@@ -560,6 +606,8 @@ export class AIGeneratorService {
       // Nginx config
       files.push(
         this.generateDeploymentFile(
+          projectId,
+          project.userId,
           'nginx.conf',
           this.generateNginxConfig()
         )
@@ -570,9 +618,9 @@ export class AIGeneratorService {
       }
 
       project.filesCount = (project.filesCount || 0) + files.length;
-      project.status = 'completed';
-      project.progress = 100;
-      project.completedAt = new Date();
+      if (!project.metadata) project.metadata = {};
+      project.metadata.progress = 100;
+      project.metadata.currentPhase = 'completed';
       await project.save();
 
       return {
@@ -592,32 +640,62 @@ export class AIGeneratorService {
       const project = await GeneratedProject.findById(projectId);
       if (!project) throw new ApiError(404, 'Project not found');
 
+      // Initialize project data if not already set
+      if (!project.requirements) {
+        // Try to analyze from description
+        project.requirements = await this.analyzeRequirements(project.description || '', project.userId.toString());
+      }
+
+      if (!project.techStack) {
+        project.techStack = {
+          frontend: 'React',
+          backend: 'Express.js',
+          database: 'MongoDB',
+          authentication: 'JWT',
+        };
+      }
+
+      if (!project.errors) {
+        project.errors = [];
+      }
+
       const requirements = project.requirements;
 
       // Execute generation phases
       const phases = [
-        () => this.generateFrontend(projectId, requirements, project.techStack.frontend),
-        () => this.generateBackend(projectId, requirements, project.techStack.backend),
-        () => this.generateDatabase(projectId, requirements),
-        () => this.generateAuthentication(projectId, requirements),
-        () => this.generateDocumentation(projectId, requirements),
-        () => this.generateDeployment(projectId, requirements),
+        { name: 'frontend', fn: () => this.generateFrontend(projectId, requirements, project.techStack?.frontend || 'React') },
+        { name: 'backend', fn: () => this.generateBackend(projectId, requirements, project.techStack?.backend || 'Express.js') },
+        { name: 'database', fn: () => this.generateDatabase(projectId, requirements) },
+        { name: 'authentication', fn: () => this.generateAuthentication(projectId, requirements) },
+        { name: 'documentation', fn: () => this.generateDocumentation(projectId, requirements) },
+        { name: 'deployment', fn: () => this.generateDeployment(projectId, requirements) },
       ];
 
       const results = [];
       for (const phase of phases) {
         try {
-          const result = await phase();
-          results.push(result);
+          // Update progress
+          if (!project.metadata) project.metadata = {};
+          project.metadata.currentPhase = phase.name;
+          project.metadata.progress = Math.round((results.length / phases.length) * 100);
+          await project.save();
+
+          const result = await phase.fn();
+          results.push({ phase: phase.name, ...result });
         } catch (error: any) {
           project.errors.push({
-            phase: `Generation Phase ${results.length}`,
+            phase: phase.name,
             error: error.message,
             timestamp: new Date(),
           });
+          console.error(`Generation failed for phase ${phase.name}:`, error);
         }
       }
 
+      // Mark as complete
+      if (!project.metadata) project.metadata = {};
+      project.metadata.progress = 100;
+      project.metadata.currentPhase = 'completed';
       await project.save();
 
       return {
@@ -807,76 +885,89 @@ export class AIGeneratorService {
 
   // ===================== File Generation Templates =====================
 
-  private generateReactFile(fileName: string, content: string) {
+  private generateReactFile(projectId: string, userId: mongoose.Types.ObjectId, fileName: string, content: string) {
     return {
-      projectId: new mongoose.Types.ObjectId(),
-      userId: new mongoose.Types.ObjectId(),
+      projectId: new mongoose.Types.ObjectId(projectId),
+      userId: userId,
       fileName,
       filePath: fileName,
-      fileType: 'component',
+      fileType: 'react',
       category: 'frontend',
       content,
-      language: fileName.endsWith('.tsx') ? 'tsx' : 'typescript',
-      size: content.length,
-      lineCount: content.split('\n').length,
-      generatedBy: 'frontend',
-      status: 'generated',
+      language: fileName.endsWith('.tsx') ? 'typescript' : (fileName.endsWith('.json') ? 'json' : 'typescript'),
+      generatedByTool: 'generateReactPage',
+      metadata: {
+        lines: content.split('\n').length,
+        size: content.length,
+        complexity: 'moderate' as const,
+      },
+      status: 'saved',
+      tags: ['generated', 'frontend'],
     };
   }
 
-  private generateBackendFile(fileName: string, content: string) {
+  private generateBackendFile(projectId: string, userId: mongoose.Types.ObjectId, fileName: string, content: string) {
     return {
-      projectId: new mongoose.Types.ObjectId(),
-      userId: new mongoose.Types.ObjectId(),
+      projectId: new mongoose.Types.ObjectId(projectId),
+      userId: userId,
       fileName,
       filePath: fileName,
-      fileType: 'api',
-      category: 'backend',
-      content,
+      fileType: 'express',
       language: 'typescript',
-      size: content.length,
-      lineCount: content.split('\n').length,
-      generatedBy: 'backend',
-      status: 'generated',
+      content,
+      generatedByTool: 'generateExpressAPI',
+      metadata: {
+        lines: content.split('\n').length,
+        size: content.length,
+        complexity: 'moderate' as const,
+      },
+      status: 'saved',
+      tags: ['generated', 'backend'],
     };
   }
 
-  private generateDocumentationFile(fileName: string, content: string) {
+  private generateDocumentationFile(projectId: string, userId: mongoose.Types.ObjectId, fileName: string, content: string) {
     return {
-      projectId: new mongoose.Types.ObjectId(),
-      userId: new mongoose.Types.ObjectId(),
+      projectId: new mongoose.Types.ObjectId(projectId),
+      userId: userId,
       fileName,
       filePath: fileName,
       fileType: 'documentation',
-      category: 'other',
-      content,
       language: 'markdown',
-      size: content.length,
-      lineCount: content.split('\n').length,
-      generatedBy: 'docs',
-      status: 'generated',
+      content,
+      generatedByTool: 'generateDocumentation',
+      metadata: {
+        lines: content.split('\n').length,
+        size: content.length,
+        complexity: 'simple' as const,
+      },
+      status: 'saved',
+      tags: ['generated', 'documentation'],
     };
   }
 
-  private generateDeploymentFile(fileName: string, content: string) {
+  private generateDeploymentFile(projectId: string, userId: mongoose.Types.ObjectId, fileName: string, content: string) {
     const language = fileName.includes('.yml') ? 'yaml' :
-      fileName.includes('Dockerfile') ? 'bash' :
+      fileName.includes('Dockerfile') ? 'dockerfile' :
       fileName.includes('json') ? 'json' :
-      'bash';
+      'text';
 
     return {
-      projectId: new mongoose.Types.ObjectId(),
-      userId: new mongoose.Types.ObjectId(),
+      projectId: new mongoose.Types.ObjectId(projectId),
+      userId: userId,
       fileName,
       filePath: fileName,
-      fileType: 'config',
-      category: 'deployment',
-      content,
+      fileType: 'documentation',
       language,
-      size: content.length,
-      lineCount: content.split('\n').length,
-      generatedBy: 'deployment',
-      status: 'generated',
+      content,
+      generatedByTool: 'generateDocumentation',
+      metadata: {
+        lines: content.split('\n').length,
+        size: content.length,
+        complexity: 'moderate' as const,
+      },
+      status: 'saved',
+      tags: ['generated', 'deployment'],
     };
   }
 

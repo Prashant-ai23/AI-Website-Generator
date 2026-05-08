@@ -16,12 +16,35 @@ interface IGeneratedProject extends Document {
   folders: string[];
   totalFiles: number;
   totalSize: number;
+  filesCount?: number;
   status: 'success' | 'partial' | 'failed';
   generationErrors?: string[];
+  errors: Array<{
+    phase: string;
+    error: string;
+    timestamp: Date;
+  }>;
   metadata?: {
     framework?: string;
     language?: string;
     modules?: string[];
+    currentPhase?: string;
+    progress?: number;
+  };
+  requirements?: {
+    modules: string[];
+    pages: string[];
+    apis: Array<{ endpoint: string; method: string; description: string }>;
+    collections: string[];
+    authentication: string;
+    userRoles: string[];
+    features: string[];
+  };
+  techStack?: {
+    frontend?: string;
+    backend?: string;
+    database?: string;
+    authentication?: string;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -67,16 +90,50 @@ const generatedProjectSchema = new Schema<IGeneratedProject>(
       type: Number,
       default: 0,
     },
+    filesCount: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: ['success', 'partial', 'failed'],
       default: 'success',
     },
     generationErrors: [String],
+    errors: [
+      {
+        phase: String,
+        error: String,
+        timestamp: Date,
+      },
+    ],
     metadata: {
       framework: String,
       language: String,
       modules: [String],
+      currentPhase: String,
+      progress: Number,
+    },
+    requirements: {
+      modules: [String],
+      pages: [String],
+      apis: [
+        {
+          endpoint: String,
+          method: String,
+          description: String,
+        },
+      ],
+      collections: [String],
+      authentication: String,
+      userRoles: [String],
+      features: [String],
+    },
+    techStack: {
+      frontend: String,
+      backend: String,
+      database: String,
+      authentication: String,
     },
   },
   { timestamps: true }
