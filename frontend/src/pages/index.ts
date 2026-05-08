@@ -3,6 +3,8 @@ export { RegisterPage } from './RegisterPage';
 export { DashboardPage } from './DashboardPage';
 export { ProjectsPage } from './ProjectsPage';
 export { TemplatesPage } from './TemplatesPage';
+export { TemplateCategoriesPage } from './TemplateCategoriesPage';
+export { TemplateCategoryForm } from './TemplateCategoryForm';
 export { GeneratorPage } from './GeneratorPage';
 export { SettingsPage } from './SettingsPage';
 export { NotFoundPage } from './NotFoundPage';

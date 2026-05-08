@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Folder,
   Palette,
+  Tag,
   Wand2,
   Settings,
   X,
@@ -25,6 +26,11 @@ const menuItems = [
     icon: Palette,
     label: 'Templates',
     path: '/templates',
+  },
+  {
+    icon: Tag,
+    label: 'Categories',
+    path: '/templates/categories',
   },
   {
     icon: Wand2,

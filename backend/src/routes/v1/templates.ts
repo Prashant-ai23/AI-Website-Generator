@@ -51,6 +51,13 @@ router.get('/recent', templateController.getRecentTemplates.bind(templateControl
 router.get('/categories', templateController.getCategories.bind(templateController));
 
 /**
+ * @route   GET /api/v1/templates/categories/:id
+ * @desc    Get category by ID
+ * @access  Public
+ */
+router.get('/categories/:id', templateController.getCategoryById.bind(templateController));
+
+/**
  * @route   GET /api/v1/templates/creator/:creatorId
  * @desc    Get templates by creator
  * @access  Public
@@ -159,5 +166,19 @@ router.post('/:id/versions', templateController.createTemplateVersion.bind(templ
  * @access  Private
  */
 router.post('/categories', templateController.createCategory.bind(templateController));
+
+/**
+ * @route   PUT /api/v1/templates/categories/:id
+ * @desc    Update category (admin only)
+ * @access  Private
+ */
+router.put('/categories/:id', templateController.updateCategory.bind(templateController));
+
+/**
+ * @route   DELETE /api/v1/templates/categories/:id
+ * @desc    Delete category (admin only)
+ * @access  Private
+ */
+router.delete('/categories/:id', templateController.deleteCategory.bind(templateController));
 
 export default router;

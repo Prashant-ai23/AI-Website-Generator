@@ -368,6 +368,23 @@ export class TemplateController {
   }
 
   /**
+   * GET /api/v1/templates/categories/:id
+   * Get single category
+   */
+  async getCategoryById(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const category = await templateService.getCategoryById(id);
+
+      res.status(200).json(
+        new ApiResponse(200, { category }, 'Category retrieved successfully')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * POST /api/v1/templates/categories
    * Create category (admin only)
    */
@@ -377,6 +394,40 @@ export class TemplateController {
 
       res.status(201).json(
         new ApiResponse(201, { category }, 'Category created successfully')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * PUT /api/v1/templates/categories/:id
+   * Update category (admin only)
+   */
+  async updateCategory(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const category = await templateService.updateCategory(id, req.body);
+
+      res.status(200).json(
+        new ApiResponse(200, { category }, 'Category updated successfully')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * DELETE /api/v1/templates/categories/:id
+   * Delete category (admin only)
+   */
+  async deleteCategory(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const result = await templateService.deleteCategory(id);
+
+      res.status(200).json(
+        new ApiResponse(200, result, 'Category deleted successfully')
       );
     } catch (error) {
       next(error);

@@ -7,6 +7,8 @@ import {
   GeneratorPage,
   SettingsPage,
   NotFoundPage,
+  TemplateCategoriesPage,
+  TemplateCategoryForm,
 } from '@/pages';
 import { AIFeaturesPage } from '@/pages/AIFeaturesPage';
 import { AIGeneratorPage } from '@/pages/AIGeneratorPage';
@@ -99,6 +101,30 @@ export const routes = [
     element: (
       <ProtectedRoute>
         <TemplateForm />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/templates/categories',
+    element: (
+      <ProtectedRoute>
+        <TemplateCategoriesPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/templates/categories/new',
+    element: (
+      <ProtectedRoute>
+        <TemplateCategoryForm />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/templates/categories/edit/:id',
+    element: (
+      <ProtectedRoute>
+        <TemplateCategoryForm />
       </ProtectedRoute>
     ),
   },

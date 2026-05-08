@@ -375,6 +375,17 @@ export class TemplateService {
   }
 
   /**
+   * Get single category by ID
+   */
+  async getCategoryById(categoryId: string): Promise<any> {
+    const category = await TemplateCategory.findById(categoryId);
+    if (!category) {
+      throw new ApiError(404, 'Category not found');
+    }
+    return category;
+  }
+
+  /**
    * Create template category (admin only)
    */
   async createCategory(categoryData: any): Promise<any> {
@@ -392,6 +403,50 @@ export class TemplateService {
 
     await newCategory.save();
     return newCategory;
+  }
+
+  /**
+   * Update template category (admin only)
+   */
+  async updateCategory(categoryId: string, updateData: any): Promise<any> {
+    const category = await TemplateCategory.findById(categoryId);
+    if (!category) {
+      throw new ApiError(404, 'Category not found');
+    }
+
+    // If name is being updated, regenerate slug
+    if (updateData.name && updateData.name !== category.name) {
+      const newSlug = this.generateSlug(updateData.name);
+      const existingSlug = await TemplateCategory.findOne({ slug: newSlug, _id: { $ne: categoryId } });
+      if (existingSlug) {
+        throw new ApiError(400, 'Category slug already exists');
+      }
+      updateData.slug = newSlug;
+    }
+
+    Object.assign(category, updateData);
+    await category.save();
+    return category;
+  }
+
+  /**
+   * Delete template category (admin only)
+   */
+  async deleteCategory(categoryId: string): Promise<any> {
+    const category = await TemplateCategory.findById(categoryId);
+    if (!category) {
+      throw new ApiError(404, 'Category not found');
+    }
+
+    // Check if any templates use this category
+    const Template = (await import('../models/Template.js')).default;
+    const templatesWithCategory = await Template.findOne({ category: categoryId });
+    if (templatesWithCategory) {
+      throw new ApiError(400, 'Cannot delete category that has templates assigned');
+    }
+
+    await TemplateCategory.findByIdAndDelete(categoryId);
+    return { message: 'Category deleted successfully' };
   }
 
   /**
