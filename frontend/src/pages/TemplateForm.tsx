@@ -1,0 +1,502 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Loader, AlertCircle, Plus, X } from 'lucide-react';
+import { MainLayout } from '@/components/layout';
+import TemplateService, { ITemplate } from '@/services/templateService';
+
+const TECH_OPTIONS = {
+  frontend: ['React', 'Vue', 'Angular', 'Next.js', 'Svelte', 'Nuxt', 'Gatsby'],
+  backend: ['Node.js', 'Express', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Go'],
+  database: ['MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'Firebase', 'DynamoDB'],
+  authentication: ['JWT', 'OAuth 2.0', 'Firebase Auth', 'Auth0', 'Passport.js'],
+};
+
+const CATEGORIES = [
+  'Admin Dashboard',
+  'Ecommerce',
+  'CRM',
+  'ERP',
+  'Portfolio',
+  'Blog',
+  'LMS',
+  'HRMS',
+  'DMS',
+];
+
+export const TemplateForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditMode = !!id;
+
+  const [formData, setFormData] = useState<ITemplate>({
+    name: '',
+    description: '',
+    category: '',
+    supportedStack: {
+      frontend: [],
+      backend: [],
+      database: [],
+      authentication: [],
+    },
+    components: [],
+    pages: [],
+    tags: [],
+    preview: {
+      image: '',
+    },
+  });
+
+  const [newComponent, setNewComponent] = useState({ name: '', description: '' });
+  const [newPage, setNewPage] = useState({ name: '', slug: '' });
+  const [newTag, setNewTag] = useState('');
+  const [loading, setLoading] = useState(isEditMode);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadCategories();
+    if (isEditMode) {
+      loadTemplate();
+    }
+  }, [id]);
+
+  const loadCategories = async () => {
+    try {
+      const data = await TemplateService.getCategories();
+      setCategories(data.categories || []);
+    } catch (err) {
+      console.error('Failed to load categories:', err);
+    }
+  };
+
+  const loadTemplate = async () => {
+    try {
+      setLoading(true);
+      const template = await TemplateService.getTemplateById(id!);
+      setFormData(template.template);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load template');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleTechStackChange = (
+    field: keyof ITemplate['supportedStack'],
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      supportedStack: {
+        ...prev.supportedStack,
+        [field]: value ? [value] : [],
+      },
+    }));
+  };
+
+  const handleAddComponent = () => {
+    if (newComponent.name.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        components: [...(prev.components || []), newComponent],
+      }));
+      setNewComponent({ name: '', description: '' });
+    }
+  };
+
+  const handleRemoveComponent = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      components: prev.components?.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleAddPage = () => {
+    if (newPage.name.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        pages: [...(prev.pages || []), newPage],
+      }));
+      setNewPage({ name: '', slug: '' });
+    }
+  };
+
+  const handleRemovePage = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      pages: prev.pages?.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleAddTag = () => {
+    if (newTag.trim() && !formData.tags?.includes(newTag)) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...(prev.tags || []), newTag.trim()],
+      }));
+      setNewTag('');
+    }
+  };
+
+  const handleRemoveTag = (tag: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags?.filter((t) => t !== tag),
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!formData.name.trim() || !formData.description.trim() || !formData.category) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      if (isEditMode) {
+        await TemplateService.updateTemplate(id!, formData);
+      } else {
+        await TemplateService.createTemplate(formData);
+      }
+
+      navigate('/templates');
+    } catch (err: any) {
+      setError(err.message || 'Failed to save template');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader className="w-8 h-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            {isEditMode ? 'Edit Template' : 'Create Template'}
+          </h1>
+        </div>
+
+        {/* Form */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-600" />
+            <p className="text-red-800">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
+          {/* Basic Info */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Template Name *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter template name"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description *
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Describe your template"
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category *
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Preview Image URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.preview?.image || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      preview: { ...prev.preview!, image: e.target.value },
+                    }))
+                  }
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Tech Stack */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Technology Stack</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(Object.keys(TECH_OPTIONS) as Array<keyof typeof TECH_OPTIONS>).map((field) => (
+                <div key={field}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
+                    {field}
+                  </label>
+                  <select
+                    value={formData.supportedStack[field]?.[0] || ''}
+                    onChange={(e) =>
+                      handleTechStackChange(
+                        field,
+                        e.target.value
+                      )
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select {field}</option>
+                    {TECH_OPTIONS[field].map((tech) => (
+                      <option key={tech} value={tech}>
+                        {tech}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Components */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Components</h2>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newComponent.name}
+                  onChange={(e) =>
+                    setNewComponent((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  placeholder="Component name"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="text"
+                  value={newComponent.description}
+                  onChange={(e) =>
+                    setNewComponent((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  placeholder="Description"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddComponent}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+
+              {formData.components && formData.components.length > 0 && (
+                <div className="space-y-2">
+                  {formData.components.map((comp, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">{comp.name}</p>
+                        {comp.description && (
+                          <p className="text-sm text-gray-600">{comp.description}</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveComponent(idx)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Pages */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Pages</h2>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newPage.name}
+                  onChange={(e) => setNewPage((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="Page name"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="text"
+                  value={newPage.slug}
+                  onChange={(e) => setNewPage((prev) => ({ ...prev, slug: e.target.value }))}
+                  placeholder="Slug"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddPage}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+
+              {formData.pages && formData.pages.length > 0 && (
+                <div className="space-y-2">
+                  {formData.pages.map((page, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">{page.name}</p>
+                        {page.slug && <p className="text-sm text-gray-600">/{page.slug}</p>}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePage(idx)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Tags</h2>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
+                  placeholder="Add a tag"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddTag}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+
+              {formData.tags && formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map((tag) => (
+                    <div
+                      key={tag}
+                      className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full"
+                    >
+                      <span className="text-sm">{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="hover:text-blue-900"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-4 pt-6 border-t border-gray-200">
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {saving && <Loader className="w-4 h-4 animate-spin" />}
+              {saving ? 'Saving...' : isEditMode ? 'Update Template' : 'Create Template'}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/templates')}
+              className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </MainLayout>
+  );
+};
+
+export default TemplateForm;

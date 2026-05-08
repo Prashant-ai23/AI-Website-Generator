@@ -1,0 +1,8 @@
+export { LoginPage } from './LoginPage';
+export { RegisterPage } from './RegisterPage';
+export { DashboardPage } from './DashboardPage';
+export { ProjectsPage } from './ProjectsPage';
+export { TemplatesPage } from './TemplatesPage';
+export { GeneratorPage } from './GeneratorPage';
+export { SettingsPage } from './SettingsPage';
+export { NotFoundPage } from './NotFoundPage';

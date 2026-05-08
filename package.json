@@ -1,30 +1,46 @@
 {
   "name": "ai-website-generator",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Full-stack AI Website Generator with React, Express, and MCP",
   "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "dev": "npx concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:all": "npx concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:mcp\"",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:mcp": "cd mcp-server && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "build:mcp": "cd mcp-server && npm run build",
+    "build:shared": "cd shared && npm run build",
+    "install:all": "npm install && npm install --workspaces",
+    "preview": "cd frontend && npm run preview"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@types/node": "^24.12.2",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^10.2.1",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.5.0",
-    "typescript": "~6.0.2",
-    "typescript-eslint": "^8.58.2",
-    "vite": "^8.0.10"
-  }
+    "concurrently": "^8.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "ai",
+    "website",
+    "generator",
+    "react",
+    "express",
+    "mongodb",
+    "mcp"
+  ],
+  "author": "",
+  "license": "MIT"
 }
