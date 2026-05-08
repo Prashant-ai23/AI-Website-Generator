@@ -1,6 +1,6 @@
 import archiver from 'archiver';
 import { Stream } from 'stream';
-import { GeneratedFile } from '../models/GeneratedFile.js';
+import GeneratedFile from '../models/GeneratedFile.js';
 import GeneratedProject from '../models/GeneratedProject.js';
 import { ApiError } from '../utils/ApiError.js';
 

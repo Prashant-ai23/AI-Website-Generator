@@ -183,4 +183,6 @@ promptHistorySchema.statics.getAverageRating = function (userId: string) {
   ]);
 };
 
-export const PromptHistory = mongoose.model<IPromptHistory>('PromptHistory', promptHistorySchema);
+const PromptHistory = mongoose.model<IPromptHistory>('PromptHistory', promptHistorySchema);
+
+export default PromptHistory;

@@ -9,10 +9,12 @@ export interface IGeneratedFile extends Document {
   userId: mongoose.Types.ObjectId;
   projectId?: mongoose.Types.ObjectId;
   fileName: string;
+  filePath?: string;
   fileType: 'react' | 'express' | 'schema' | 'menu' | 'documentation' | 'other';
+  category?: string;
   language: string;
   content: string;
-  generatedByTool: 'generateReactPage' | 'generateExpressAPI' | 'generateMongoSchema' | 'generateSidebarMenu' | 'generateDocumentation';
+  generatedByTool: 'generateReactPage' | 'generateExpressAPI' | 'generateMongoSchema' | 'generateSidebarMenu' | 'generateDocumentation' | string;
   toolParameters?: Record<string, any>;
   metadata?: {
     lines?: number;
@@ -47,10 +49,18 @@ const generatedFileSchema = new Schema<IGeneratedFile>(
       trim: true,
       match: [/^[\w\-./]+(\.(ts|tsx|js|jsx|json|md|sql|yml|yaml|env|cjs|mjs|conf|lock|dockerfile|txt|html|css|xml))?$/i, 'Invalid file name or extension'],
     },
+    filePath: {
+      type: String,
+      sparse: true,
+    },
     fileType: {
       type: String,
       enum: ['react', 'express', 'schema', 'menu', 'documentation', 'other'],
       required: [true, 'File type is required'],
+    },
+    category: {
+      type: String,
+      sparse: true,
     },
     language: {
       type: String,
@@ -64,7 +74,6 @@ const generatedFileSchema = new Schema<IGeneratedFile>(
     },
     generatedByTool: {
       type: String,
-      enum: ['generateReactPage', 'generateExpressAPI', 'generateMongoSchema', 'generateSidebarMenu', 'generateDocumentation'],
       required: [true, 'Generation tool is required'],
     },
     toolParameters: {
@@ -143,4 +152,6 @@ generatedFileSchema.virtual('projectName', {
   options: { select: 'name' },
 });
 
-export const GeneratedFile = mongoose.model<IGeneratedFile>('GeneratedFile', generatedFileSchema);
+const GeneratedFile = mongoose.model<IGeneratedFile>('GeneratedFile', generatedFileSchema);
+
+export default GeneratedFile;

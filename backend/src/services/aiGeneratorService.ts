@@ -1,8 +1,8 @@
 import { ApiError } from '../utils/ApiError.js';
 import GeneratedProject from '../models/GeneratedProject.js';
-import { GeneratedFile } from '../models/GeneratedFile.js';
+import GeneratedFile from '../models/GeneratedFile.js';
 import RequirementAnalysis from '../models/RequirementAnalysis.js';
-import { PromptHistory } from '../models/PromptHistory.js';
+import PromptHistory from '../models/PromptHistory.js';
 import mongoose from 'mongoose';
 
 interface GenerationConfig {

@@ -2,8 +2,8 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../types/AuthRequest.js';
 import AIGeneratorService from '../services/aiGeneratorService.js';
 import GeneratedProject from '../models/GeneratedProject.js';
-import { GeneratedFile } from '../models/GeneratedFile.js';
-import { PromptHistory } from '../models/PromptHistory.js';
+import GeneratedFile from '../models/GeneratedFile.js';
+import PromptHistory from '../models/PromptHistory.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
 
